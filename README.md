@@ -8,11 +8,12 @@ Implementar un servidor multihilo/multicliente en Linux Fedora que gestione inte
 ---
 
 ## 🌐 Configuración de Red (Clase B)
-De acuerdo a los requerimientos, todas las máquinas deben pertenecer a la red **172.16.0.0**.
+De acuerdo a los requerimientos, todas las máquinas deben pertenecer a la red **172.16.0.0
+Puerta de enlace 172.16.0.1**.
 
 | Rol | Integrante | Sistema Operativo | IP Estática |
 | :--- | :--- | :--- | :--- |
-| **Servidor** | **Dragonkael** | **Fedora KDE (43)** | `172.16.0.1` |
+| **Servidor** | **Dragonkael** | **Fedora KDE (43)** | `172.16.0.11` |
 | Cliente 1 | Yhojan | Windows | `172.16.0.2` |
 | Cliente 2 | Fredy | Linux Mint | `172.16.0.3` |
 | Cliente 3 | Jadee | Ubuntu | `172.16.0.4` |
