@@ -9,15 +9,15 @@ Implementar un servidor multihilo/multicliente en Linux Fedora que gestione inte
 
 ## 🌐 Configuración de Red (Clase B)
 De acuerdo a los requerimientos, todas las máquinas deben pertenecer a la red **172.16.0.0
-Puerta de enlace 172.16.0.1**.
+### Puerta de enlace 172.16.0.1**.
 
-| Rol | Integrante | Sistema Operativo | IP Estática |
-| :--- | :--- | :--- | :--- |
-| **Servidor** | **Dragonkael** | **Fedora KDE (43)** | `172.16.0.11` |
-| Cliente 1 | Yhojan | Windows | `172.16.0.2` |
-| Cliente 2 | Fredy | Linux Mint | `172.16.0.3` |
-| Cliente 3 | Jadee | Ubuntu | `172.16.0.4` |
-| Cliente 4 | Ulises | ArchLinux | `172.16.0.5` |
+| Rol | Integrante | Sistema Operativo | IP Estática | IP Host
+| :--- | :--- | :--- | :--- | :--- |
+| **Servidor** | **Dragonkael** | **Fedora KDE (43)** | `172.16.0.11` | 172.16.0.10 |
+| Cliente 1 | Yhojan | Windows | `172.16.0.2` | ---|
+| Cliente 2 | Fredy | Linux Mint | `172.16.0.3` | 172.16.0.20 |
+| Cliente 3 | Jadee | Ubuntu | `172.16.0.4` | 172.16.0.30 |
+| Cliente 4 | Ulises | ArchLinux | `172.16.0.5` | 172.16.0.40 |
 
 ### Comandos de Red Express:
 * **Linux:** `sudo nmcli connection modify 'Wired connection 1' ipv4.addresses 172.16.0.X/16 ipv4.method manual && sudo nmcli connection up 'Wired connection 1'`
