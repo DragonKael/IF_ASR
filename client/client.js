@@ -2,7 +2,7 @@ const net = require('net');
 const dgram = require('dgram');
 const readline = require('readline');
 
-const SERVER_IP = '172.16.0.1'; // IP del servidor (Fedora)
+const SERVER_IP = '172.16.0.11'; // IP del servidor (Fedora)
 const TCP_PORT = 3000;
 const UDP_PORT = 3001;
 
