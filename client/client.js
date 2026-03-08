@@ -2,72 +2,71 @@ const net = require('net');
 const dgram = require('dgram');
 const readline = require('readline');
 
-const SERVER_IP = '172.16.0.11'; // IP del servidor (Fedora)
+const SERVER_IP = '172.16.0.11'; // IP Actualizada del servidor Fedora
 const TCP_PORT = 3000;
 const UDP_PORT = 3001;
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: '>> ' });
 const tcpClient = new net.Socket();
 const udpClient = dgram.createSocket('udp4');
 
-// Conexión TCP inicial
+let inChatMode = false;
+
 tcpClient.connect(TCP_PORT, SERVER_IP, () => {
-    console.log('Conectado al servidor Fedora via TCP.');
+    console.log('\x1b[32m%s\x1b[0m', 'Conectado al servidor (172.16.0.11)');
     showMenu();
 });
 
-// Escucha de respuestas TCP (Resultados y Chat)
 tcpClient.on('data', (data) => {
     const res = JSON.parse(data.toString());
     if (res.type === 'CHAT_MSG') {
-        console.log(`\n[CHAT] ${res.user}: ${res.msg}`);
+        readline.cursorTo(process.stdout, 0);
+        readline.clearLine(process.stdout, 0);
+        console.log(`\x1b[36m[${res.user}]\x1b[0m: ${res.msg}`);
+        if (inChatMode) rl.prompt(true);
     } else {
-        console.log('\n[RESULTADO]:', JSON.stringify(res.data, null, 2));
+        console.log('\n\x1b[33m[RESULTADO]:\x1b[0m', JSON.stringify(res.data));
+        if (!inChatMode) showMenu();
     }
-    showMenu();
 });
 
 function showMenu() {
-    console.log('\n--- MENÚ DE CONTROL DE REDES ---');
-    console.log('1. Ordenar 10 números (TCP)');
-    console.log('2. Multiplicación de Matrices NxN (TCP)');
-    console.log('3. Enviar mensaje de Chat (TCP)');
-    console.log('4. Prueba de pulso UDP (UDP)');
+    inChatMode = false;
+    console.log('\n--- 📋 MENÚ (TCP/UDP) ---');
+    console.log('1. Ordenar 10 números');
+    console.log('2. Multiplicar Matrices NxN');
+    console.log('3. ENTRAR AL CHAT GRUPAL');
+    console.log('4. Prueba UDP');
     console.log('5. Salir');
-    rl.question('Seleccione una opción: ', (opt) => {
-        switch (opt) {
+    rl.prompt();
+}
+
+rl.on('line', (line) => {
+    const input = line.trim();
+    if (inChatMode) {
+        if (input.toLowerCase() === '/salir') return showMenu();
+        tcpClient.write(JSON.stringify({ type: 'CHAT', payload: input }));
+        rl.prompt();
+    } else {
+        switch (input) {
             case '1':
-                rl.question('Ingrese 10 números separados por coma: ', (input) => {
-                    const nums = input.split(',').map(Number);
-                    tcpClient.write(JSON.stringify({ type: 'ORDENAR', payload: nums }));
+                rl.question('Números (ej. 1,9,3...): ', (n) => {
+                    tcpClient.write(JSON.stringify({ type: 'ORDENAR', payload: n.split(',').map(Number) }));
                 });
                 break;
             case '2':
-                // Ejemplo simple de matriz 2x2 para demo
-                const A = [[1, 2], [3, 4]], B = [[5, 6], [7, 8]];
+                const A = [[1,1],[1,1]], B = [[2,2],[2,2]]; // Ejemplo 2x2
                 tcpClient.write(JSON.stringify({ type: 'MATRIZ', payload: { A, B } }));
                 break;
             case '3':
-                rl.question('Mensaje: ', (msg) => {
-                    tcpClient.write(JSON.stringify({ type: 'CHAT', payload: msg }));
-                    showMenu();
-                });
+                inChatMode = true;
+                console.log('\x1b[35m%s\x1b[0m', '\nMODO CHAT ACTIVO (Escribe /salir para volver)');
+                rl.prompt();
                 break;
             case '4':
-                const msgUDP = Buffer.from('Prueba UDP desde cliente');
-                udpClient.send(msgUDP, UDP_PORT, SERVER_IP, () => {
-                    console.log('Trama UDP enviada.');
-                    showMenu();
-                });
+                udpClient.send("Test UDP", UDP_PORT, SERVER_IP, () => console.log('Enviado.'));
                 break;
-            case '5':
-                process.exit();
-            default:
-                showMenu();
+            case '5': process.exit(0);
         }
-    });
-}
+    }
+});
