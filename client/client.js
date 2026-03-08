@@ -62,10 +62,44 @@ rl.on('line', (line) => {
                     tcpClient.write(JSON.stringify({ type: 'ORDENAR', payload: n.split(',').map(Number) }));
                 });
                 break;
-            case '2':
-                const A = [[1,1],[1,1]], B = [[3,3],[3,3]];
-                tcpClient.write(JSON.stringify({ type: 'MATRIZ', payload: { A, B } }));
-                break;
+            case '2': // Multiplicación de Matrices NxN 
+            rl.question('🔢 Ingrese el tamaño N de las matrices cuadradas: ', (nStr) => {
+                const N = parseInt(nStr);
+                if (isNaN(N) || N <= 0) {
+                    console.log('❌ Error: N debe ser un número entero positivo.');
+                    return showMenu();
+                }
+
+                console.log(`\n--- Configurando Matrices ${N}x${N} ---`);
+                
+                // Función recursiva para capturar filas de una matriz
+                const readMatrix = (name, row, matrix, callback) => {
+                    if (row === N) return callback(matrix);
+                    
+                    rl.question(`Matriz ${name} - Ingrese los ${N} valores de la fila ${row + 1} (separados por coma): `, (input) => {
+                        const vals = input.split(',').map(Number);
+                        if (vals.length !== N || vals.some(isNaN)) {
+                            console.log(`⚠️ Error: Debe ingresar exactamente ${N} números.`);
+                            return readMatrix(name, row, matrix, callback);
+                        }
+                        matrix.push(vals);
+                        readMatrix(name, row + 1, matrix, callback);
+                    });
+                };
+
+                // Capturar Matriz A, luego B, y enviar
+                readMatrix('A', 0, [], (matrixA) => {
+                    readMatrix('B', 0, [], (matrixB) => {
+                        console.log('🚀 Enviando matrices al servidor Fedora...');
+                        tcpClient.write(JSON.stringify({ 
+                            type: 'MATRIZ', 
+                            payload: { A: matrixA, B: matrixB } 
+                        }));
+                        // El resultado llegará por el evento 'data' del socket
+                    });
+                });
+            });
+            break;
             case '3':
                 inChatMode = true;
                 console.log('\x1b[35m%s\x1b[0m', '\n💬 CHAT GRUPAL ACTIVO (Escribe /salir para volver)');
