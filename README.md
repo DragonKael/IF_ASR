@@ -97,6 +97,12 @@ git clone https://github.com/dragonkael/IF_ASR.git
 cd IF_ASR
 npm install
 ```
+#### 1.1 Actualizar y Preparar(en caso de cambios en el codigo)
+```bash
+cd IF_ASR
+git pull origin main
+npm install
+```
 
 ### 2. Ejecución
 * **Servidor (Fedora):** `npm run server`
