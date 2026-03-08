@@ -50,15 +50,18 @@ const tcpServer = net.createServer((socket) => {
                     socket.write(JSON.stringify({ type: 'RES_SORT', data: sorted, time: Date.now() - start }));
                     break;
 
-                case 'MATRIZ':
-                    logger(`Procesando matriz NxN para ${socket.userName}`);
+                case 'MATRIZ': 
+                    console.log(`[TCP] Iniciando cálculo de matriz para ${socket.userName}`);
                     const workerPath = path.join(__dirname, 'matrixWorker.js');
                     const worker = new Worker(workerPath, { workerData: req.payload });
+
                     worker.on('message', (result) => {
-                        if (socket.writable) {
-                            socket.write(JSON.stringify({ type: 'RES_MATRIX', data: result, time: Date.now() - start }));
-                        }
+                        // Aseguramos que 'result' contenga la matriz procesada
+                        socket.write(JSON.stringify({ type: 'RES_MATRIX', data: result }));
+                        console.log(`[TCP] Matriz enviada con éxito a ${socket.userName}`);
                     });
+
+                    worker.on('error', (err) => console.error("Error en Worker:", err));
                     break;
 
                 case 'CHAT':
