@@ -5,27 +5,34 @@ const { Worker } = require('worker_threads');
 
 const TCP_PORT = 3000;
 const UDP_PORT = 3001;
-const HOST = '0.0.0.0'; // Escucha en todas las interfaces
+const HOST = '0.0.0.0';
 
 let clients = [];
 
-// --- SERVIDOR TCP (Multicliente/Multihilo)  ---
 const tcpServer = net.createServer((socket) => {
-    socket.name = `${socket.remoteAddress}:${socket.remotePort}`;
+    // Identificación temporal por IP/Puerto hasta que haga Login
+    socket.remoteID = `${socket.remoteAddress}:${socket.remotePort}`;
+    socket.userName = "Anónimo"; 
     clients.push(socket);
-    console.log(`[TCP] Cliente conectado: ${socket.name}`);
 
     socket.on('data', (data) => {
         try {
             const req = JSON.parse(data.toString());
             
             switch(req.type) {
-                case 'ORDENAR': // Ordenar 10 números [cite: 13]
+                case 'LOGIN':
+                    socket.userName = req.payload;
+                    // Formato solicitado: Nombre + IP + Puerto
+                    socket.fullID = `[${socket.userName}] (${socket.remoteID})`;
+                    console.log(`\x1b[32m[LOGIN]\x1b[0m Usuario identificado: ${socket.fullID}`);
+                    break;
+
+                case 'ORDENAR':
                     const sorted = req.payload.sort((a, b) => a - b);
                     socket.write(JSON.stringify({ type: 'RES_SORT', data: sorted }));
                     break;
 
-                case 'MATRIZ': // Multiplicación NxN [cite: 13]
+                case 'MATRIZ':
                     const workerPath = path.join(__dirname, 'matrixWorker.js');
                     const worker = new Worker(workerPath, { workerData: req.payload });
                     worker.on('message', (result) => {
@@ -33,33 +40,37 @@ const tcpServer = net.createServer((socket) => {
                     });
                     break;
 
-                case 'CHAT': // Chat Grupal [cite: 13]
+                case 'CHAT':
+                    // Se usa el fullID para que todos sepan quién habla
                     broadcast(socket, req.payload);
                     break;
             }
-        } catch (e) { console.error("Error en trama recibida"); }
+        } catch (e) { console.error("Error en trama"); }
     });
 
     socket.on('close', () => {
         clients = clients.filter(c => c !== socket);
-        console.log(`[TCP] Desconectado: ${socket.name}`);
+        console.log(`[DESCONECTADO] ${socket.fullID || socket.remoteID}`);
     });
 });
 
 function broadcast(sender, message) {
     clients.forEach(client => {
         if (client !== sender) {
-            client.write(JSON.stringify({ type: 'CHAT_MSG', user: sender.name, msg: message }));
+            client.write(JSON.stringify({ 
+                type: 'CHAT_MSG', 
+                user: sender.fullID, // Enviamos la identificación completa
+                msg: message 
+            }));
         }
     });
 }
 
-// --- SERVIDOR UDP ---
 const udpServer = dgram.createSocket('udp4');
 udpServer.on('message', (msg, rinfo) => {
     console.log(`[UDP] Trama de ${rinfo.address}: ${msg}`);
     udpServer.send("ACK_UDP: Recibido", rinfo.port, rinfo.address);
 });
 
-tcpServer.listen(TCP_PORT, HOST, () => console.log(`Servidor TCP en puerto ${TCP_PORT}`));
+tcpServer.listen(TCP_PORT, HOST, () => console.log(`Servidor TCP en puerto ${TCP_PORT} (IP: 172.16.0.11)`));
 udpServer.bind(UDP_PORT, HOST);
