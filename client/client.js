@@ -1,19 +1,16 @@
 /**
- * CLIENTE MULTIPLATAFORMA MEJORADO
- * - Soporte para enmarcado TCP con prefijo de longitud
- * - Recepción de mensajes UDP
- * - Reconexión automática
- * - Mejor experiencia de usuario
+ * CLIENTE
  */
 
 const net = require('net');
 const dgram = require('dgram');
 const readline = require('readline');
 
-const SERVER_IP = '172.16.0.11'; // Cambiar según necesidad
+const SERVER_IP = '172.16.0.11';
 const TCP_PORT = 3000;
 const UDP_PORT = 3001;
-const RECONNECT_DELAY = 3000; // 3 segundos
+const RECONNECT_DELAY = 3000;
+const MATRIX_TIMEOUT = 30000; // 30 segundos
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -27,7 +24,11 @@ let inChatMode = false;
 let myName = "";
 let reconnectTimer = null;
 
-// --- ENMARCADO TCP (recepción) ---
+// Variables para control de timeout de matriz
+let waitingForMatrix = false;
+let matrixTimeout = null;
+
+// --- ENMARCADO TCP ---
 let messageLength = null;
 let buffer = Buffer.alloc(0);
 
@@ -37,12 +38,10 @@ function setupTcpClient() {
     tcpClient.on('connect', () => {
         console.log('\x1b[32m✅ Conectado al servidor Fedora\x1b[0m');
         if (myName) {
-            // Re-enviar login si ya tenemos nombre
             sendTcp({ type: 'LOGIN', payload: myName });
         } else {
             startLogin();
         }
-        // Reiniciar variables de enmarcado
         messageLength = null;
         buffer = Buffer.alloc(0);
     });
@@ -104,10 +103,15 @@ function sendTcp(obj) {
     tcpClient.write(Buffer.concat([header, buffer]));
 }
 
-// --- RESPUESTAS DEL SERVIDOR ---
+// --- MANEJO DE RESPUESTAS ---
 function handleResponse(res) {
+    // Si estábamos esperando matriz y llega respuesta de matriz, cancelamos timeout
+    if (waitingForMatrix && res.type === 'RES_MATRIX') {
+        clearTimeout(matrixTimeout);
+        waitingForMatrix = false;
+    }
+
     if (res.type === 'CHAT_MSG') {
-        // Mostrar mensaje de chat sin romper la línea de entrada
         readline.cursorTo(process.stdout, 0);
         readline.clearLine(process.stdout, 0);
         console.log(`\x1b[36m${res.user}\x1b[0m: ${res.msg}`);
@@ -131,15 +135,12 @@ function handleResponse(res) {
     }
 }
 
-// --- MENSAJES UDP ENTRANTES ---
+// --- UDP ENTRANTE ---
 udpClient.on('message', (msg, rinfo) => {
     console.log(`\n📡 [UDP desde ${rinfo.address}:${rinfo.port}]: ${msg.toString()}`);
     if (!inChatMode) rl.prompt();
 });
-
-udpClient.on('error', (err) => {
-    console.log(`\n❌ Error UDP: ${err.message}`);
-});
+udpClient.on('error', (err) => console.log(`\n❌ Error UDP: ${err.message}`));
 
 // --- LOGIN ---
 async function startLogin() {
@@ -155,7 +156,6 @@ async function startLogin() {
     }
 }
 
-// --- MENÚ PRINCIPAL ---
 function showMenu() {
     inChatMode = false;
     console.log(`\n--- 📋 MENÚ PRINCIPAL [${myName}] ---`);
@@ -167,9 +167,18 @@ function showMenu() {
     rl.prompt();
 }
 
-// --- UTILIDAD PREGUNTA ASÍNCRONA ---
 function question(query) {
     return new Promise((resolve) => rl.question(query, resolve));
+}
+
+// --- TIMEOUT PARA MATRIZ ---
+function startMatrixTimeout() {
+    waitingForMatrix = true;
+    matrixTimeout = setTimeout(() => {
+        console.log('\n\x1b[31m⏰ Tiempo de espera agotado para la operación de matriz.\x1b[0m');
+        waitingForMatrix = false;
+        if (!inChatMode) showMenu();
+    }, MATRIX_TIMEOUT);
 }
 
 // --- LÓGICA PRINCIPAL ---
@@ -192,6 +201,7 @@ rl.on('line', async (line) => {
             const nums = numsStr.split(',').map(Number).filter(n => !isNaN(n));
             if (nums.length === 0) {
                 console.log('❌ No ingresaste números válidos.');
+                showMenu();
             } else {
                 sendTcp({ type: 'ORDENAR', payload: nums });
             }
@@ -214,7 +224,7 @@ rl.on('line', async (line) => {
                     const row = rowStr.split(',').map(Number);
                     if (row.length !== N || row.some(isNaN)) {
                         console.log(`⚠️ Error: Deben ser exactamente ${N} números. Reintenta.`);
-                        i--; // Reintentar fila
+                        i--;
                     } else {
                         matrix.push(row);
                     }
@@ -224,8 +234,9 @@ rl.on('line', async (line) => {
 
             const A = await readMatrix('A');
             const B = await readMatrix('B');
-            console.log('⏳ Enviando al servidor...');
+            console.log('⏳ Enviando al servidor... (timeout 30s)');
             sendTcp({ type: 'MATRIZ', payload: { A, B } });
+            startMatrixTimeout();
             break;
         }
 
@@ -257,10 +268,8 @@ rl.on('line', async (line) => {
     }
 });
 
-// Iniciar conexión
 setupTcpClient();
 
-// Manejar cierre del cliente con Ctrl+C
 process.on('SIGINT', () => {
     console.log('\nCerrando cliente...');
     tcpClient.destroy();
