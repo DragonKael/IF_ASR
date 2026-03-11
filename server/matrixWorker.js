@@ -1,14 +1,8 @@
-/**
- * Worker para multiplicación de matrices.
- * Recibe { A, B } y devuelve el resultado.
- * Incluye validación adicional por seguridad.
- */
+const { parentPort } = require('worker_threads');
 
-const { parentPort, workerData } = require('worker_threads');
-
+// Función de multiplicación de matrices (igual que antes)
 function multiplyMatrices(A, B) {
     const n = A.length;
-    // Verificar que ambas sean cuadradas y del mismo tamaño
     if (!Array.isArray(A) || !Array.isArray(B) || n === 0 || B.length !== n) {
         throw new Error('Dimensiones de matrices no coinciden');
     }
@@ -31,10 +25,13 @@ function multiplyMatrices(A, B) {
     return result;
 }
 
-try {
-    const { A, B } = workerData;
-    const result = multiplyMatrices(A, B);
-    parentPort.postMessage(result);
-} catch (err) {
-    parentPort.postMessage({ error: err.message });
-}
+// Escuchamos las tareas enviadas por el pool
+parentPort.on('message', (task) => {
+    try {
+        const { A, B } = task; // task es el objeto { A, B } enviado desde el servidor
+        const result = multiplyMatrices(A, B);
+        parentPort.postMessage(result);
+    } catch (err) {
+        parentPort.postMessage({ error: err.message });
+    }
+});
