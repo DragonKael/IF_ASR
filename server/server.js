@@ -80,3 +80,28 @@ tcpServer.listen(TCP_PORT, HOST, () => {
     console.log(`\x1b[35m%s\x1b[0m`, `Servidor TCP/UDP listo en 172.16.0.11`);
 });
 udpServer.bind(UDP_PORT, HOST);
+
+// Capturar el Ctrl + C (SIGINT)
+process.on('SIGINT', () => {
+    console.log('\n\x1b[31m%s\x1b[0m', '⚠️ Iniciando cierre ordenado del servidor...');
+
+    // Avisar a todos los clientes TCP
+    clients.forEach(client => {
+        client.write(JSON.stringify({ 
+            type: 'CHAT_MSG', 
+            user: '[SERVIDOR]', 
+            msg: 'El servidor se cerrará en 5 segundos. Guardando cambios...' 
+        }));
+        client.destroy(); // Cierra el socket de forma limpia
+    });
+
+    // Cerrar servidores
+    tcpServer.close(() => {
+        console.log('✅ Servidor TCP cerrado.');
+        udpServer.close(() => {
+            console.log('✅ Servidor UDP cerrado.');
+            console.log('🚀 Desconexión completada. ¡Adiós!');
+            process.exit(0);
+        });
+    });
+});
