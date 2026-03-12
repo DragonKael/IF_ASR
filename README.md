@@ -109,6 +109,49 @@ npm install
 * **Clientes:** `npm run client`
 
 ---
+### 1. Tramas capturadas mediante WireShark y Filtros de Red
+
+[cite_start]Para garantizar la correcta evaluación del tráfico entre el servidor (Fedora) y los clientes (Windows, Mint, Ubuntu, ArchLinux) [cite: 102][cite_start], se implementaron filtros de captura y visualización orientados a la red Clase B (`172.16.0.0/16`).
+
+**Topología de Referencia:**
+* **Servidor Fedora (Node.js):** `172.16.0.10` (Puertos: `5000` TCP / `5001` UDP)
+* **Cliente 1 (Windows - Yhojan):** `172.16.0.20`
+* **Cliente 2 (Mint - Fredy):** `172.16.0.30`
+* **Cliente 3 (Ubuntu - Jadee):** `172.16.0.40`
+* **Cliente 4 (ArchLinux - Ulises):** `172.16.0.50`
+
+#### 1. Filtros en el Servidor (Fedora - Terminal Only)
+[cite_start]Dado que el servidor anfitrión opera sin interfaz gráfica, se utilizó `tshark` para la captura de paquetes[cite: 117]. 
+
+* **Capturar todo el tráfico TCP y UDP de la aplicación Node.js:**
+    `tshark -i <interfaz_red> -f "net 172.16.0.0/16 and (tcp port 5000 or udp port 5001)" -w capturas_servidor.pcap`
+    *(Este comando guarda las tramas en un archivo `.pcap` para su posterior análisis gráfico).*
+
+* **Monitoreo en tiempo real (solo tráfico de los clientes asignados):**
+    `tshark -i <interfaz_red> -Y "ip.src == 172.16.0.20 or ip.src == 172.16.0.30 or ip.src == 172.16.0.40 or ip.src == 172.16.0.50"`
+
+#### 2. Filtros de Visualización en Clientes (Wireshark GUI)
+Cada cliente debe aplicar los siguientes filtros en la barra de búsqueda de Wireshark para aislar su interacción específica con el servidor, ignorando el ruido de fondo de la red. 
+
+* **Filtro para Yhojan (Windows):**
+    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.20 and (tcp.port == 5000 or udp.port == 5001)`
+
+* **Filtro para Fredy (Linux Mint):**
+    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.30 and (tcp.port == 5000 or udp.port == 5001)`
+
+* **Filtro para Jadee (Ubuntu):**
+    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.40 and (tcp.port == 5000 or udp.port == 5001)`
+
+* **Filtro para Ulises (ArchLinux):**
+    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.50 and (tcp.port == 5000 or udp.port == 5001)`
+
+#### 3. Filtros Específicos por Protocolo (Para Pruebas del Menú en Consola)
+[cite_start]Para validar requerimientos específicos de la interacción continua del menú[cite: 110, 111], se utilizaron los siguientes filtros:
+
+* **Solo ver el establecimiento de conexión (Handshake TCP de 3 vías):**
+    `tcp.flags.syn == 1 and tcp.flags.ack == 0 and ip.addr == 172.16.0.10`
+* **Monitorear exclusivamente el tráfico UDP (ej. para pruebas de latencia o mensajería rápida del chat):**
+    `udp.port == 5001 and ip.addr == 172.16.0.10`
 
 ## 📋 Requerimientos de la Evaluación
 1.  **Interacción Continua:** Menú en consola con operaciones consecutivas.
