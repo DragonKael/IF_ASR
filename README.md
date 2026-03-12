@@ -134,16 +134,16 @@ npm install
 Cada cliente debe aplicar los siguientes filtros en la barra de búsqueda de Wireshark para aislar su interacción específica con el servidor, ignorando el ruido de fondo de la red. 
 
 * **Filtro para Yhojan (Windows):**
-    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.20 and (tcp.port == 5000 or udp.port == 5001)`
+    `ip.addr == 172.16.0.2 and ip.addr == 172.16.0.11 and (tcp.port == 3000 or udp.port == 3001)`
 
 * **Filtro para Fredy (Linux Mint):**
-    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.30 and (tcp.port == 5000 or udp.port == 5001)`
+    `ip.addr == 172.16.0.20 and ip.addr == 172.16.0.11 and (tcp.port == 3000 or udp.port == 3001)`
 
 * **Filtro para Jadee (Ubuntu):**
-    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.40 and (tcp.port == 5000 or udp.port == 5001)`
+    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.40 and (tcp.port == 3000 or udp.port == 3001)`
 
 * **Filtro para Ulises (ArchLinux):**
-    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.50 and (tcp.port == 5000 or udp.port == 5001)`
+    `ip.addr == 172.16.0.10 and ip.addr == 172.16.0.50 and (tcp.port == 3000 or udp.port == 3001)`
 
 #### 3. Filtros Específicos por Protocolo (Para Pruebas del Menú en Consola)
 [cite_start]Para validar requerimientos específicos de la interacción continua del menú[cite: 110, 111], se utilizaron los siguientes filtros:
