@@ -1,0 +1,5 @@
+zone "misposts_grupo3_2026_I.org" {
+    type master;
+    file "/etc/bind/db.misposts_grupo3_2026_I.org";
+    check-names ignore;
+};

@@ -1,0 +1,13 @@
+
+module my-phpfpm 1.0;
+
+require {
+	type container_t;
+	type proc_t;
+	class filesystem associate;
+}
+
+#============= container_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow container_t proc_t:filesystem associate;

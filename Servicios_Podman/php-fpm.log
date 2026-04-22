@@ -1,0 +1,1 @@
+type=AVC msg=audit(1776672765.261:3262): avc:  denied  { associate } for  pid=19288 comm="php-fpm" name="2" scontext=system_u:object_r:container_t:s0:c6,c361 tcontext=system_u:object_r:proc_t:s0 tclass=filesystem permissive=1

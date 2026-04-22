@@ -1,0 +1,13 @@
+$TTL    604800
+@       IN      SOA     ns1.misposts_grupo3_2026_I.org. admin.misposts_grupo3_2026_I.org. (
+                              20260420  ; Serial (YYYYMMDD)
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache
+
+@       IN      NS      ns1.misposts_grupo3_2026_I.org.
+ns1     IN      A       10.0.0.5
+www     IN      A       10.0.0.4
+db      IN      A       10.0.0.2
+ftp     IN      A       10.0.0.6

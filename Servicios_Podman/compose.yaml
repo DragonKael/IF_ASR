@@ -1,0 +1,67 @@
+services:
+  # Servidor de Base de Datos (Requerimiento 5.4)
+  # Servidor de Base de Datos (Requerimiento 5.4)
+  db:
+    image: docker.io/library/postgres:15
+    container_name: asr_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: uac_password
+      POSTGRES_DB: db_proyecto
+    networks:
+      asr_net:
+        ipv4_address: 10.0.0.2
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data:Z
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:Z
+
+  # Interfaz Gráfica para DB (Requerimiento 5.4)
+  pgadmin:
+    image: docker.io/dpage/pgadmin4:latest
+    container_name: asr_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@uac.edu.pe
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      asr_net:
+        ipv4_address: 10.0.0.3
+
+  # Servidor Web (Requerimiento 5.4)
+  web:
+    image: docker.io/webdevops/php-nginx:8.2
+    container_name: asr_nginx
+    volumes:
+      - ./html:/app:Z
+    environment:
+      - WEB_DOCUMENT_ROOT=/app
+    networks:
+      asr_net:
+        ipv4_address: 10.0.0.4
+  # Servidor DNS (Bind9)
+  dns:
+    image: docker.io/ubuntu/bind9:latest
+    container_name: asr_dns
+    volumes:
+      - ./dns_config/named.conf.local:/etc/bind/named.conf.local:Z
+      - ./dns_config/db.misposts_grupo3_2026_I.org:/etc/bind/db.misposts_grupo3_2026_I.org:Z
+    networks:
+      asr_net:
+        ipv4_address: 10.0.0.5
+
+  # Servidor FTP
+  ftp:
+    image: docker.io/fauria/vsftpd
+    container_name: asr_ftp
+    environment:
+      - FTP_USER=grupo3
+      - FTP_PASS=uac2026
+      - ADDRESS=10.0.0.6
+    volumes:
+      - ./ftp:/home/vsftpd:Z
+    networks:
+      asr_net:
+        ipv4_address: 10.0.0.6
+
+networks:
+  asr_net:
+    external: true

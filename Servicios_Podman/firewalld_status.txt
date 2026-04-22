@@ -1,0 +1,17 @@
+public (default)
+  target: default
+  ingress-priority: 0
+  egress-priority: 0
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: dhcpv6-client dns http mdns ssh
+  ports: 3000/tcp 3001/udp 8080/tcp 5432/tcp 80/tcp 443/tcp 53/tcp 53/udp 953/tcp 20-21/tcp
+  protocols: 
+  forward: yes
+  masquerade: yes
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+	rule family="ipv4" source address="10.0.0.0/8" accept
