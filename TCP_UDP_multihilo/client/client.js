@@ -6,7 +6,7 @@ const net = require('net');
 const dgram = require('dgram');
 const readline = require('readline');
 
-const SERVER_IP = '172.16.0.11';
+const SERVER_IP = '10.0.0.10';
 const TCP_PORT = 3000;
 const UDP_PORT = 3001;
 const RECONNECT_DELAY = 3000;
